@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: My first template in AWS CloudFormation Step by Step.
+Resources:
+  WebServerInstance:
+    Type: AWS::EC2::Instance #service-provider::service-name::data-type-name
+    Properties: 
+      ImageId: ami-0a3c3a20c09d6f377 # obtido no console ec2
+      InstanceType: t2.micro
+      SubnetId: subnet-08b567e045cda5bbd
+      SecurityGroupIds: # Realizando o Attach do Security Group na EC2
+        - !Ref WebServerSecurityGroup
+      Tags: 
+        - Key: Name 
+          Value: web-server
+        - Key: Project
+          Value: AWS CloudFormation Step by Step 
+  
+  WebServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for web servers
+      VpcId: vpc-065f0904992fbe28b
+      SecurityGroupIngress:
+        - IpProtocol: tcp 
+          FromPort: 80
+          ToPort: 80 
+          CidrIp: '0.0.0.0/0'
+        
