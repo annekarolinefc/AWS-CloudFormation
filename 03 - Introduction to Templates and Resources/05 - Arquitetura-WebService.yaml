@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Template in AWS CloudFormation Step by Step.
+Resources:
+
+  ######## CRIAÇÃO DA VPC ########
+  ActivityVpc:
+    Type: AWS::EC2::VPC
+    Description: VPC definition
+  Properties:
+    CidrBlock: 10.0.0.0/16
+    Tags: 
+      - Key: Name 
+        Value: ActivityVPC
+
+  ######## CRIAÇÃO DA SUBNET ########
+  ActivitySubnet:
+    Type: AWS::EC2::Subnet
+    Description: Subnet Definition
+    Properties:
+      CidrBlock: 10.0.0.0/24
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref ActivityVpc #ATTACH TO VPC
+      Tags: 
+      - Key: Name 
+        Value: ActivitySubnet
+
+  ######## CRIAÇÃO DA ROUTE TABLE ########
+  ActivityRouteTable:
+    Type: AWS::EC2::RouteTable
+    Description: Route Table Definition
+    Properties:
+      VpcId: !Ref ActivityVpc #ATTACH TO VPC
+
+  ######## CRIAÇÃO DO INTERNET GATEWAY ########
+  ActivityInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Description: Internet Gateway Definition
+
+  ######## CRIAÇÃO DO GATEWAY ATTACH ########
+  ActivityGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Description: Gateway Attachment Definition
+    Properties:
+      VpcId: !Ref ActivityVpc
+      InternetGatewayId: !Ref ActivityInternetGateway
+
+  InternetRoute:
+    Type: AWS::EC2::Route
+    DependesOn:
+      - ActivityGatewayAttachment
+    Properties:
+      RouteTableID: !Ref ActivityRouteTbale
+      GatewayId: !Ref ActivityInternetGateway
+      DestinationCidrBlock: 0.0.0.0/0
+
+  ActivitySubnetRouteTableAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref ActivityRouteTable
+      SubnetId: !Ref ActivitySubnet
+
+  ActivityInstace:
+    Type: AWS::EC2::Instance
+    DependsOn:
+      - InternetRoute
+      - ActivitySubnetRouteTableAssoc
+    Properties: 
+      InstanceType: t2.micro
+      SubnetId: !Ref ActivitySubnet
+      ImageId: ami-0a3c3a20c09d6f377
+       
+  ActivitySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for web servers
+      VpcId: !Ref ActivityVpc
+      SecurityGroupIngress:
+        - 
+          IpProtocol: icmp
+          FromPort: -1
+          ToPort: -1 
+          CidrIp: '0.0.0.0/0'
